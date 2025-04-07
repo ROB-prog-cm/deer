@@ -1,7 +1,12 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
+import { getAllModels } from '../api/getModels.ts';
 
 
 export const Sidebar: FC = () => {
+
+  useEffect(() => {
+    getAllModels();
+  }, []);
 
   const models = [
     { id: 1, name: 'Model GPT-3' },

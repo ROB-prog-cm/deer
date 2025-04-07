@@ -1,40 +1,27 @@
-import { FC, useState } from 'react';
+import { FC, FormEvent, useState } from 'react';
+import { postSubmittingQuestion } from '../api/postSubmittingQuestion.ts';
+import { $allModels, $postQuestion, $responseReceived, postQuestion } from '../store/store.tsx';
+import { useUnit } from 'effector-react';
 
-export  const Main: FC = () => {
+export const Main: FC = () => {
+  const postQuestionState = useUnit($postQuestion);
+  const responseReceivedState = useUnit($responseReceived);
+
+  console.log('postQuestion', postQuestion);
+
+  $allModels.watch(($models) => {
+    console.log('$models-effector1111', $models);
+  });
+
   const [inputValue, setInputValue] = useState<string>('');
   const [response, setResponse] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!inputValue.trim()) return;
-
-    setLoading(true);
-    setResponse(null); // Очищаем предыдущий ответ
-
-    try {
-      // Замените URL на ваш API endpoint
-      const apiResponse = await fetch('https://api.example.com/ai', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query: inputValue }),
-      });
-
-      if (!apiResponse.ok) {
-        throw new Error('Ошибка при выполнении запроса');
-      }
-
-      const data = await apiResponse.json();
-      setResponse(data.result || 'Ответ не получен');
-    } catch (error) {
-      console.error(error);
-      setResponse('Произошла ошибка при обработке запроса.');
-    } finally {
-      setLoading(false);
-    }
+    postSubmittingQuestion(postQuestionState);
   };
+
 
   return (
     <div className=" flex flex-col items-center justify-center bg-gray-100 p-4 w-full">
@@ -42,8 +29,8 @@ export  const Main: FC = () => {
       <form onSubmit={handleSubmit} className="w-full max-w-md">
         <div className="flex flex-col space-y-4">
           <textarea
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            value={postQuestionState}
+            onChange={(e) => postQuestion(e.target.value)}
             placeholder="Введите ваш запрос здесь..."
             className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             rows={4}
@@ -71,6 +58,9 @@ export  const Main: FC = () => {
           <p className="text-gray-700 whitespace-pre-wrap">{response}</p>
         </div>
       )}
+
+
+      <div>{responseReceivedState}</div>
     </div>
   );
 };
